@@ -26,22 +26,38 @@ jobs:
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
-      - name: Build with Gradle (debug mode)
+      - name: Check network connectivity
         run: |
-          cd plugin
+          echo "=== Testing network connectivity ==="
+          curl -s -o /dev/null -w "%{http_code}" https://maven.nariko.org/release/ || echo "nariko FAILED"
+          curl -s -o /dev/null -w "%{http_code}" https://maven.google.com/ || echo "google FAILED"
+          curl -s -o /dev/null -w "%{http_code}" https://repo.maven.apache.org/ || echo "maven FAILED"
+          curl -s -o /dev/null -w "%{http_code}" https://plugins.gradle.org/ || echo "gradle FAILED"
+
+      - name: Check gradle version
+        run: gradle --version
+
+      - name: Build with Gradle
+        run: |
           gradle assembleDebug --no-daemon --stacktrace > gradle_output.txt 2>&1 || true
+          echo "=== EXIT CODE: $? ==="
+
+      - name: Show gradle output (last 100 lines)
+        run: |
+          echo "=== Last 100 lines of Gradle output ==="
+          tail -100 gradle_output.txt
 
       - name: Upload Gradle Output
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gradle-output
-          path: plugin/gradle_output.txt
+          name: gradle-output-${{ github.run_number }}
+          path: gradle_output.txt
           retention-days: 1
 
       - name: Upload APK if exists
         uses: actions/upload-artifact@v4
         with:
-          name: plugin-apk-debug
-          path: plugin/build/outputs/apk/debug/*.apk.lnrp
+          name: plugin-apk-${{ github.run_number }}
+          path: plugin/build/outputs/apk/debug/*.lnrp
           retention-days: 1
