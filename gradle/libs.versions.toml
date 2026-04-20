@@ -20,8 +20,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 lightnovelreader-api = { module = "io.nightfish.lightnovelreader:api", version.ref = "lightnovelreader" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
-compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout", version.ref = "composeFoundationLayout" }
+composeMaterial3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
+composeFoundationLayout = { module = "androidx.compose.foundation:foundation-layout", version.ref = "composeFoundationLayout" }
 
 [plugins]
 kotlin_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
