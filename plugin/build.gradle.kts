@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -20,7 +19,6 @@ android {
     }
 
     buildFeatures {
-        compose = true
         buildConfig = true
     }
 
@@ -30,10 +28,6 @@ android {
         }
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
-
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
@@ -41,11 +35,11 @@ android {
     }
 }
 
-// Rename APK output to .lnrp (AGP 8.x)
+// Rename APK output to .lnrp
 @Suppress("DEPRECATION")
 android.applicationVariants.all {
     outputs.all {
-        val output = this as com.android.build.api.variant.impl.VariantOutputImpl
+        val output = this as com.android.build.gradle.internal.api.ApplicationVariantOutputImpl
         output.outputFileName = output.outputFileName.replace(".apk", ".apk.lnrp")
     }
 }
@@ -53,24 +47,15 @@ android.applicationVariants.all {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
 
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.androidx.runtime)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.foundation.layout)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.material3)
-    implementation(libs.kotlinx.serialization.cbor)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.chttp)
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
-    implementation(libs.jsoup)
 
     // LNR Api
     implementation(libs.lightnovelreader.api)
