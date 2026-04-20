@@ -1,0 +1,59 @@
+name: Build Plugin
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        
+      - name: Grant execute permission
+        run: chmod +x gradlew
+        
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: plugin
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-apk
+          path: plugin/app/builds/outputs/apk/debug/*.apk.lnrp
+          retention-days: 7
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-apk
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.lnrp"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
