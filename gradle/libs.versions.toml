@@ -1,6 +1,6 @@
 [versions]
 desugar = "2.1.5"
-agp = "9.0.0"
+agp = "8.7.3"
 kotlin = "2.0.21"
 kotlinxCoroutinesCore = "1.8.1"
 kotlinSerialization = "1.7.1"
