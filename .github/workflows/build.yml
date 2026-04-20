@@ -30,7 +30,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build with Gradle
-        run: cd plugin && gradle assembleDebug --no-daemon
+        run: cd plugin && gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
