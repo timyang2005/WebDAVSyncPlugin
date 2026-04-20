@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: false
+        default: '1.0.0'
 
 env:
   GRADLE_VERSION: 9.2.1
@@ -29,8 +34,8 @@ jobs:
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
-      - name: Build with Gradle
-        run: cd plugin && gradle assembleDebug --no-daemon --stacktrace
+      - name: Build Plugin
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
@@ -58,10 +63,7 @@ jobs:
       - name: Get Version Info
         id: version
         run: |
-          VERSION="1.0.0"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          fi
+          VERSION="${{ github.event.inputs.version || '1.0.0' }}"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
@@ -76,9 +78,10 @@ jobs:
             ## WebDAV Sync Plugin for LightNovelReader
 
             ### Features
-            - WebDAV cloud sync support
+            - WebDAV cloud sync support (Nextcloud, ownCloud, Synology, etc.)
+            - Sync reading history, bookshelf, and app settings
             - Auto and manual sync modes
-            - Sync reading history, bookshelf and settings
+            - Incremental sync with conflict resolution
 
             ### Installation
             1. Download the .apk.lnrp file
