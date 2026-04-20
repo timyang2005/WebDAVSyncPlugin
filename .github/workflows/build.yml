@@ -13,7 +13,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,8 +26,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
-        with:
-          cache-disabled: true
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
@@ -46,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,14 +74,14 @@ jobs:
           name: WebDAV Sync Plugin v${{ steps.version.outputs.VERSION }}
           body: |
             ## WebDAV Sync Plugin for LightNovelReader
-            
+
             ### Features
-            - WebDAV 云同步支持
-            - 自动和手动同步模式
-            - 同步阅读记录、书架和软件设置
-            
+            - WebDAV cloud sync support
+            - Auto and manual sync modes
+            - Sync reading history, bookshelf and settings
+
             ### Installation
-            1. 下载 .apk.lnrp 文件
-            2. 使用文件管理器安装到 LightNovelReader
+            1. Download the .apk.lnrp file
+            2. Install with file manager in LightNovelReader
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
