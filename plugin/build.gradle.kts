@@ -1,3 +1,7 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -49,44 +53,41 @@ androidComponents {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        jvmTarget.set(JvmTarget.JVM_17)
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
 
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    
-    // Kotlin
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.json)
-    
-    // Compose
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.foundation.layout)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
-    implementation(libs.androidx.activity.compose)
-    
-    // Network - WebDAV
+    implementation(libs.kotlinx.serialization.cbor)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.cxhttp)
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
-    
-    // HTML/XML parsing
     implementation(libs.jsoup)
     
-    // LNR API
+    // LNR Api
     implementation(libs.lightnovelreader.api)
 }
 
 val debugHostPkg = "indi.dmzz_yyhyy.lightnovelreader.debug"
 val releaseHostPkg = "indi.dmzz_yyhyy.lightnovelreader"
 
-fun pluginApk(): File = File(layout.buildDirectory.asFile.get(), "outputs/apk/debug")
-    .walkTopDown()
-    .first { it.isFile && (it.name.endsWith(".apk") || it.name.endsWith(".lnrp")) }
+fun pluginApk(): File =
+    File(layout.buildDirectory.asFile.get(), "outputs/apk/debug")
+        .walkTopDown()
+        .first {
+            it.isFile && (it.name.endsWith(".apk") || it.name.endsWith(".lnrp"))
+        }
 
 fun installPluginTask(name: String, hostPkg: String) {
     tasks.register(name) {
@@ -95,11 +96,12 @@ fun installPluginTask(name: String, hostPkg: String) {
 
         doLast {
             val adb = listOf(androidComponents.sdkComponents.adb.get().asFile.absolutePath) +
-                      (System.getenv("ANDROID_SERIAL")?.let { listOf("-s", it) } ?: emptyList())
+                    (System.getenv("ANDROID_SERIAL")?.let { listOf("-s", it) } ?: emptyList())
 
             val src = pluginApk()
-            val file = if (src.name.endsWith(".apk")) src else
-                File(src.parent, src.name.removeSuffix(".lnrp"))
+            val file =
+                if (src.name.endsWith(".apk")) src
+                else File(src.parent, src.name.removeSuffix(".lnrp"))
                     .also { src.renameTo(it) }
 
             try {
@@ -117,8 +119,8 @@ fun installPluginTask(name: String, hostPkg: String) {
             providers.exec {
                 commandLine(
                     adb + listOf(
-                        "shell", "monkey", "-p", hostPkg,
-                        "-c", "android.intent.category.LAUNCHER", "1"
+                        "shell", "monkey", "-p", hostPkg, "-c",
+                        "android.intent.category.LAUNCHER", "1"
                     )
                 )
             }.result.get()
