@@ -8,7 +8,7 @@ import io.nightfish.lightnovelreader.api.userdata.UserDataRepositoryApi
 import io.nightfish.lightnovelreader.api.userdata.UserDataDaoApi
 import io.nightfish.lightnovelreader.api.book.BookRepositoryApi
 import io.nightfish.lightnovelreader.api.bookshelf.BookshelfRepositoryApi
-import io.nightfish.lightnovelreader.api.LocalBookDataSourceApi
+import io.nightfish.lightnovelreader.api.book.LocalBookDataSourceApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,11 +18,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import com.dobao.webdavsync.data.SyncType
 import com.dobao.webdavsync.data.WebDAVConfig
 import com.dobao.webdavsync.sync.SyncManager
@@ -35,8 +33,8 @@ import kotlinx.coroutines.launch
     versionName = "1.0.0",
     author = "DoBao",
     description = "WebDAV 云同步插件，支持同步阅读记录、书架和软件设置",
-    updateUrl = "https://github.com/dobao/WebDAVSyncPlugin",
-    apiVersion = 1
+    updateUrl = "https://github.com/timyang2005/WebDAVSyncPlugin",
+    apiVersion = 2
 )
 class WebDAVSyncPlugin(
     private val userDataRepositoryApi: UserDataRepositoryApi,
@@ -45,10 +43,10 @@ class WebDAVSyncPlugin(
     private val bookshelfRepositoryApi: BookshelfRepositoryApi,
     private val localBookDataSourceApi: LocalBookDataSourceApi
 ) : LightNovelReaderPlugin() {
-    
+
     private var syncManager: SyncManager? = null
     private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
-    
+
     companion object {
         const val PREF_WEBDAV_URL = "webdav_url"
         const val PREF_WEBDAV_USERNAME = "webdav_username"
@@ -60,11 +58,11 @@ class WebDAVSyncPlugin(
         const val PREF_AUTO_SYNC_INTERVAL = "auto_sync_interval"
         const val PREF_LAST_SYNC_TIME = "last_sync_time"
         const val PREF_SYNC_ON_WIFI_ONLY = "sync_wifi_only"
-        
+
         const val DEFAULT_SYNC_INTERVAL = 30 // minutes
         const val SYNC_BASE_PATH = "/LightNovelReader"
     }
-    
+
     override fun onLoad() {
         // 初始化同步管理器
         val config = loadWebDAVConfig()
@@ -76,7 +74,7 @@ class WebDAVSyncPlugin(
             bookshelfRepositoryApi = bookshelfRepositoryApi,
             localBookDataSourceApi = localBookDataSourceApi
         )
-        
+
         // 检查是否启用自动同步
         scope.launch {
             userDataRepositoryApi
@@ -89,7 +87,7 @@ class WebDAVSyncPlugin(
                 }
         }
     }
-    
+
     private fun loadWebDAVConfig(): WebDAVConfig {
         return WebDAVConfig(
             url = "",
@@ -97,39 +95,27 @@ class WebDAVSyncPlugin(
             password = ""
         )
     }
-    
+
     private fun startAutoSync() {
         scope.launch {
             userDataRepositoryApi
                 .intUserData(PREF_AUTO_SYNC_INTERVAL)
                 .getFlowWithDefault(DEFAULT_SYNC_INTERVAL)
                 .collect { minutes ->
-                    // 定时执行同步
-                    syncManager?.let { _ ->
+                    // 定期执行同步
+                    syncManager?.let { manager ->
                         performSync(
-                            readingHistory = isSyncEnabled(PREF_SYNC_READING_HISTORY),
-                            bookshelf = isSyncEnabled(PREF_SYNC_BOOKSHELF),
-                            settings = isSyncEnabled(PREF_SYNC_SETTINGS)
+                            readingHistory = true,
+                            bookshelf = true,
+                            settings = true
                         )
                     }
                 }
         }
     }
-    
-    private suspend fun isSyncEnabled(key: String): Boolean {
-        var result = false
-        userDataRepositoryApi.booleanUserData(key).getFlowWithDefault(true).collect {
-            result = it
-        }
-        return result
-    }
-    
+
     @Composable
     override fun PageContent(paddingValues: PaddingValues) {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-        
-        // 状态
         var webDAVUrl by remember { mutableStateOf("") }
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
@@ -137,144 +123,67 @@ class WebDAVSyncPlugin(
         var syncBookshelf by remember { mutableStateOf(true) }
         var syncSettings by remember { mutableStateOf(true) }
         var autoSyncEnabled by remember { mutableStateOf(false) }
-        var autoSyncInterval by remember { mutableIntStateOf(DEFAULT_SYNC_INTERVAL) }
-        var syncOnWifiOnly by remember { mutableStateOf(true) }
-        var lastSyncTime by remember { mutableStateOf(0L) }
-        var isSyncing by remember { mutableStateOf(false) }
-        var syncStatus by remember { mutableStateOf("") }
-        var syncError by remember { mutableStateOf<String?>(null) }
-        
-        // 加载配置
+        var statusMessage by remember { mutableStateOf("") }
+        val scope = rememberCoroutineScope()
+
         LaunchedEffect(Unit) {
-            webDAVUrl = loadStringPref(PREF_WEBDAV_URL)
-            username = loadStringPref(PREF_WEBDAV_USERNAME)
-            password = loadStringPref(PREF_WEBDAV_PASSWORD)
-            syncReadingHistory = loadBooleanPref(PREF_SYNC_READING_HISTORY, true)
-            syncBookshelf = loadBooleanPref(PREF_SYNC_BOOKSHELF, true)
-            syncSettings = loadBooleanPref(PREF_SYNC_SETTINGS, true)
-            autoSyncEnabled = loadBooleanPref(PREF_AUTO_SYNC_ENABLED, false)
-            autoSyncInterval = loadIntPref(PREF_AUTO_SYNC_INTERVAL, DEFAULT_SYNC_INTERVAL)
-            syncOnWifiOnly = loadBooleanPref(PREF_SYNC_ON_WIFI_ONLY, true)
-            lastSyncTime = loadLongPref(PREF_LAST_SYNC_TIME, 0L)
+            webDAVUrl = userDataRepositoryApi.stringUserData(PREF_WEBDAV_URL).get() ?: ""
+            username = userDataRepositoryApi.stringUserData(PREF_WEBDAV_USERNAME).get() ?: ""
+            password = userDataRepositoryApi.stringUserData(PREF_WEBDAV_PASSWORD).get() ?: ""
+            syncReadingHistory = userDataRepositoryApi.booleanUserData(PREF_SYNC_READING_HISTORY).get() ?: true
+            syncBookshelf = userDataRepositoryApi.booleanUserData(PREF_SYNC_BOOKSHELF).get() ?: true
+            syncSettings = userDataRepositoryApi.booleanUserData(PREF_SYNC_SETTINGS).get() ?: true
+            autoSyncEnabled = userDataRepositoryApi.booleanUserData(PREF_AUTO_SYNC_ENABLED).get() ?: false
         }
-        
-        SyncSettingsContent(
-            paddingValues = paddingValues,
-            webDAVUrl = webDAVUrl,
-            onWebDAVUrlChange = { 
-                webDAVUrl = it
-                scope.launch { saveStringPref(PREF_WEBDAV_URL, it) }
-            },
-            username = username,
-            onUsernameChange = {
-                username = it
-                scope.launch { saveStringPref(PREF_WEBDAV_USERNAME, it) }
-            },
-            password = password,
-            onPasswordChange = {
-                password = it
-                scope.launch { saveStringPref(PREF_WEBDAV_PASSWORD, it) }
-            },
-            syncReadingHistory = syncReadingHistory,
-            onSyncReadingHistoryChange = {
-                syncReadingHistory = it
-                scope.launch { saveBooleanPref(PREF_SYNC_READING_HISTORY, it) }
-            },
-            syncBookshelf = syncBookshelf,
-            onSyncBookshelfChange = {
-                syncBookshelf = it
-                scope.launch { saveBooleanPref(PREF_SYNC_BOOKSHELF, it) }
-            },
-            syncSettings = syncSettings,
-            onSyncSettingsChange = {
-                syncSettings = it
-                scope.launch { saveBooleanPref(PREF_SYNC_SETTINGS, it) }
-            },
-            autoSyncEnabled = autoSyncEnabled,
-            onAutoSyncEnabledChange = {
-                autoSyncEnabled = it
-                scope.launch { saveBooleanPref(PREF_AUTO_SYNC_ENABLED, it) }
-            },
-            autoSyncInterval = autoSyncInterval,
-            onAutoSyncIntervalChange = {
-                autoSyncInterval = it
-                scope.launch { saveIntPref(PREF_AUTO_SYNC_INTERVAL, it) }
-            },
-            syncOnWifiOnly = syncOnWifiOnly,
-            onSyncOnWifiOnlyChange = {
-                syncOnWifiOnly = it
-                scope.launch { saveBooleanPref(PREF_SYNC_ON_WIFI_ONLY, it) }
-            },
-            lastSyncTime = lastSyncTime,
-            isSyncing = isSyncing,
-            syncStatus = syncStatus,
-            syncError = syncError,
-            onManualSync = {
-                scope.launch {
-                    performManualSync(
-                        webDAVUrl, username, password,
-                        syncReadingHistory, syncBookshelf, syncSettings
-                    ) { status, error ->
-                        syncStatus = status
-                        syncError = error
-                        if (error == null) {
-                            lastSyncTime = System.currentTimeMillis()
-                            scope.launch { saveLongPref(PREF_LAST_SYNC_TIME, lastSyncTime) }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            item {
+                SyncSettingsContent(
+                    webDAVUrl = webDAVUrl,
+                    username = username,
+                    password = password,
+                    syncReadingHistory = syncReadingHistory,
+                    syncBookshelf = syncBookshelf,
+                    syncSettings = syncSettings,
+                    autoSyncEnabled = autoSyncEnabled,
+                    statusMessage = statusMessage,
+                    onWebDAVUrlChange = { webDAVUrl = it },
+                    onUsernameChange = { username = it },
+                    onPasswordChange = { password = it },
+                    onSyncReadingHistoryChange = { syncReadingHistory = it },
+                    onSyncBookshelfChange = { syncBookshelf = it },
+                    onSyncSettingsChange = { syncSettings = it },
+                    onAutoSyncChange = { autoSyncEnabled = it },
+                    onSyncClick = {
+                        scope.launch {
+                            statusMessage = "正在同步..."
+                            performManualSync(
+                                webDAVUrl, username, password,
+                                syncReadingHistory, syncBookshelf, syncSettings
+                            ) { msg -> statusMessage = msg }
+                        }
+                    },
+                    onSaveConfig = {
+                        scope.launch {
+                            userDataRepositoryApi.stringUserData(PREF_WEBDAV_URL).set(webDAVUrl)
+                            userDataRepositoryApi.stringUserData(PREF_WEBDAV_USERNAME).set(username)
+                            userDataRepositoryApi.stringUserData(PREF_WEBDAV_PASSWORD).set(password)
+                            userDataRepositoryApi.booleanUserData(PREF_SYNC_READING_HISTORY).set(syncReadingHistory)
+                            userDataRepositoryApi.booleanUserData(PREF_SYNC_BOOKSHELF).set(syncBookshelf)
+                            userDataRepositoryApi.booleanUserData(PREF_SYNC_SETTINGS).set(syncSettings)
+                            userDataRepositoryApi.booleanUserData(PREF_AUTO_SYNC_ENABLED).set(autoSyncEnabled)
+                            statusMessage = "配置已保存"
                         }
                     }
-                }
+                )
             }
-        )
-    }
-    
-    private suspend fun loadStringPref(key: String): String {
-        var result = ""
-        userDataRepositoryApi.stringUserData(key).getFlowWithDefault("").collect {
-            result = it
         }
-        return result
     }
-    
-    private suspend fun loadBooleanPref(key: String, default: Boolean): Boolean {
-        var result = default
-        userDataRepositoryApi.booleanUserData(key).getFlowWithDefault(default).collect {
-            result = it
-        }
-        return result
-    }
-    
-    private suspend fun loadIntPref(key: String, default: Int): Int {
-        var result = default
-        userDataRepositoryApi.intUserData(key).getFlowWithDefault(default).collect {
-            result = it
-        }
-        return result
-    }
-    
-    private suspend fun loadLongPref(key: String, default: Long): Long {
-        var result = default
-        userDataRepositoryApi.longUserData(key).getFlowWithDefault(default).collect {
-            result = it
-        }
-        return result
-    }
-    
-    private suspend fun saveStringPref(key: String, value: String) {
-        userDataRepositoryApi.stringUserData(key).set(value)
-    }
-    
-    private suspend fun saveBooleanPref(key: String, value: Boolean) {
-        userDataRepositoryApi.booleanUserData(key).set(value)
-    }
-    
-    private suspend fun saveIntPref(key: String, value: Int) {
-        userDataRepositoryApi.intUserData(key).set(value)
-    }
-    
-    private suspend fun saveLongPref(key: String, value: Long) {
-        userDataRepositoryApi.longUserData(key).set(value)
-    }
-    
+
     private suspend fun performManualSync(
         webDAVUrl: String,
         username: String,
@@ -282,38 +191,38 @@ class WebDAVSyncPlugin(
         syncReadingHistory: Boolean,
         syncBookshelf: Boolean,
         syncSettings: Boolean,
-        onStatus: (String, String?) -> Unit
+        onStatus: (String) -> Unit
     ) {
         if (webDAVUrl.isBlank()) {
-            onStatus("同步失败", "请先配置 WebDAV 服务器地址")
+            onStatus("同步失败: 请先配置 WebDAV 服务器地址")
             return
         }
-        
-        onStatus("正在同步...", null)
-        
+
+        onStatus("正在同步...")
+
         val config = WebDAVConfig(
             url = webDAVUrl,
             username = username,
             password = password
         )
-        
+
         syncManager?.updateConfig(config)
-        
+
         val syncTypes = mutableListOf<SyncType>()
         if (syncReadingHistory) syncTypes.add(SyncType.READING_HISTORY)
         if (syncBookshelf) syncTypes.add(SyncType.BOOKSHELF)
         if (syncSettings) syncTypes.add(SyncType.SETTINGS)
-        
+
         try {
             syncManager?.performSync(syncTypes) { status ->
-                onStatus(status, null)
+                onStatus(status)
             }
-            onStatus("同步完成", null)
+            onStatus("同步完成")
         } catch (e: Exception) {
-            onStatus("同步失败", e.message ?: "未知错误")
+            onStatus("同步失败: ${e.message ?: "未知错误"}")
         }
     }
-    
+
     private suspend fun performSync(
         readingHistory: Boolean,
         bookshelf: Boolean,
@@ -323,7 +232,7 @@ class WebDAVSyncPlugin(
         if (readingHistory) syncTypes.add(SyncType.READING_HISTORY)
         if (bookshelf) syncTypes.add(SyncType.BOOKSHELF)
         if (settings) syncTypes.add(SyncType.SETTINGS)
-        
+
         syncManager?.performSync(syncTypes) { }
     }
 }
