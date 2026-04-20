@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -37,13 +38,19 @@ android {
     }
 }
 
-// Rename APK output to .lnrp
-@Suppress("DEPRECATION")
-android.applicationVariants.all {
-    outputs.all {
-        val output = this as com.android.build.gradle.internal.api.ApplicationVariantOutputImpl
-        output.outputFileName = output.outputFileName.replace(".apk", ".apk.lnrp")
+tasks.register<Copy>("renameApkToLnrp") {
+    doLast {
+        val apkDir = File(project.layout.buildDirectory.asFile.get(), "outputs/apk/debug")
+        apkDir.listFiles()?.forEach { file ->
+            if (file.name.endsWith(".apk")) {
+                file.renameTo(File(file.parentFile, file.name.replace(".apk", ".apk.lnrp")))
+            }
+        }
     }
+}
+
+tasks.named("assembleDebug") {
+    finalizedBy("renameApkToLnrp")
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
