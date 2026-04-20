@@ -42,6 +42,6 @@ jobs:
       - name: Upload APK if exists
         uses: actions/upload-artifact@v4
         with:
-          name: plugin-apk
+          name: plugin-apk-debug
           path: plugin/build/outputs/apk/debug/*.apk.lnrp
           retention-days: 1
