@@ -1,11 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -21,7 +19,6 @@ android {
     }
 
     buildFeatures {
-        compose = true
         buildConfig = true
     }
 
@@ -38,19 +35,13 @@ android {
     }
 }
 
-tasks.register<Copy>("renameApkToLnrp") {
-    doLast {
-        val apkDir = File(project.layout.buildDirectory.asFile.get(), "outputs/apk/debug")
-        apkDir.listFiles()?.forEach { file ->
-            if (file.name.endsWith(".apk")) {
-                file.renameTo(File(file.parentFile, file.name.replace(".apk", ".apk.lnrp")))
-            }
-        }
+// Rename APK output to .lnrp
+@Suppress("DEPRECATION")
+android.applicationVariants.all {
+    outputs.all {
+        val output = this as com.android.build.gradle.internal.api.ApplicationVariantOutputImpl
+        output.outputFileName = output.outputFileName.replace(".apk", ".apk.lnrp")
     }
-}
-
-tasks.named("assembleDebug") {
-    finalizedBy("renameApkToLnrp")
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
@@ -65,15 +56,4 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
-
-    // Compose
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.material3)
-    implementation(libs.compose.ui)
-    implementation(libs.androidx.foundation.layout)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.runtime)
-
-    // LNR Api
-    implementation(libs.lightnovelreader.api)
 }
