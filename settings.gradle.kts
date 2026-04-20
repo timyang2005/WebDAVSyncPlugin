@@ -23,7 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "WebDAVSyncPlugin"
-
 include(":plugin")
-
-
