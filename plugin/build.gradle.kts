@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -30,6 +29,10 @@ android {
         release {
             isMinifyEnabled = false
         }
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     compileOptions {
@@ -67,11 +70,11 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.kotlinx.serialization.cbor)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.cxhttp)
+    implementation(libs.chttp)
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
     implementation(libs.jsoup)
-    
+
     // LNR Api
     implementation(libs.lightnovelreader.api)
 }
@@ -83,7 +86,7 @@ fun pluginApk(): File =
     File(layout.buildDirectory.asFile.get(), "outputs/apk/debug")
         .walkTopDown()
         .first {
-            it.isFile && (it.name.endsWith(".apk") || it.name.endsWith(".lnrp"))
+            it.isFile && it.name.endsWith(".apk") || it.name.endsWith(".lnrp")
         }
 
 fun installPluginTask(name: String, hostPkg: String) {
@@ -92,7 +95,7 @@ fun installPluginTask(name: String, hostPkg: String) {
         dependsOn("assembleDebug")
 
         doLast {
-            val adb = listOf(androidComponents.sdkComponents.adb.get().asFile.absolutePath) +
+            val adb = listOf(androidComponents.sdkComponents.adb.get().absolutePath) +
                     (System.getenv("ANDROID_SERIAL")?.let { listOf("-s", it) } ?: emptyList())
 
             val src = pluginApk()
