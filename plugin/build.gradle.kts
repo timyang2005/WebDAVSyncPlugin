@@ -60,8 +60,8 @@ dependencies {
 
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.composeMaterial3)
+    implementation(libs.composeFoundationLayout)
 
     implementation(libs.lightnovelreader.api)
 
