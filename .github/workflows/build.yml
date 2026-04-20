@@ -26,7 +26,6 @@ jobs:
 
       - name: Build with Gradle
         run: gradle assembleDebug --no-daemon
-        working-directory: plugin
         env:
           GRADLE_USER_HOME: /tmp/.gradle
 
