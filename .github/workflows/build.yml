@@ -21,19 +21,21 @@ jobs:
           
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
-        
-      - name: Grant execute permission
-        run: chmod +x gradlew
-        
+        with:
+          gradle-wrapper-file: ./plugin/gradle/wrapper/gradle-wrapper.properties
+          generate-wrap-exe: true
+          
       - name: Build with Gradle
         run: ./gradlew assembleDebug --no-daemon
         working-directory: plugin
+        env:
+          GRADLE_USER_HOME: /tmp/.gradle
         
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: plugin-apk
-          path: plugin/app/builds/outputs/apk/debug/*.apk.lnrp
+          path: plugin/build/outputs/apk/debug/*.apk.lnrp
           retention-days: 7
           
   release:
