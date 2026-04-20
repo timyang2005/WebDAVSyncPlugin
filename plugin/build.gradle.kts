@@ -72,31 +72,3 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
-
-afterEvaluate {
-    tasks.register<Copy>("renameApk") {
-        description = "Rename debug APK to .apk.lnrp"
-        doFirst {
-            def apkDir = new File(project.buildDir, "outputs/apk/debug")
-            if (apkDir.exists()) {
-                def apkFiles = apkDir.listFiles({ f -> f.name.endsWith(".apk") } as java.io.FilenameFilter)
-                if (apkFiles && apkFiles.length > 0) {
-                    def apk = apkFiles[0]
-                    def newName = apk.name.replace(".apk", ".apk.lnrp")
-                    def dest = new File(apkDir, newName)
-                    if (dest.exists()) dest.delete()
-                    project.copy {
-                        from apk
-                        into apkDir
-                        rename { newName }
-                    }
-                    println "Renamed: ${apk.name} -> ${newName}"
-                }
-            }
-        }
-    }
-
-    tasks.matching { it.name == "assembleDebug" }.configureEach {
-        finalizedBy("renameApk")
-    }
-}
