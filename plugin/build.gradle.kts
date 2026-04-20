@@ -4,7 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -29,10 +30,6 @@ android {
         release {
             isMinifyEnabled = false
         }
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     compileOptions {
