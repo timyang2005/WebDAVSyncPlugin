@@ -1,6 +1,7 @@
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -95,7 +96,7 @@ fun installPluginTask(name: String, hostPkg: String) {
         dependsOn("assembleDebug")
 
         doLast {
-            val adb = listOf(androidComponents.sdkComponents.adb.get().absolutePath) +
+            val adb = listOf(androidComponents.sdkComponents.adb.get().asFile.absolutePath) +
                     (System.getenv("ANDROID_SERIAL")?.let { listOf("-s", it) } ?: emptyList())
 
             val src = pluginApk()
