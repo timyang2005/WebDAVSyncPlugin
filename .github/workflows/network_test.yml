@@ -1,0 +1,37 @@
+name: Network Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Maven repos
+        run: |
+          echo "=== Testing maven.nariko.org ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 30 "https://maven.nariko.org/release/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/maven-metadata.xml" || echo "FAILED"
+          
+          echo ""
+          echo "=== Testing google maven ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 "https://dl.google.com/dl/android/maven2/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/maven-metadata.xml" || echo "NOT_FOUND"
+          
+          echo ""
+          echo "=== Testing maven central ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 "https://repo.maven.apache.org/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/maven-metadata.xml" || echo "NOT_FOUND"
+
+      - name: Download LNR API
+        run: |
+          mkdir -p ~/.m2/repository/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/
+          if curl -L --max-time 120             -o ~/.m2/repository/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/api-0.2-SNAPSHOT.aar             "https://maven.nariko.org/release/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/api-0.2-SNAPSHOT.aar"; then
+            echo "Download OK: $(ls -lh ~/.m2/repository/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/)"
+          else
+            echo "Download FAILED"
+          fi
+
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: network-test-result
+          path: ~/.m2/repository/io/nightfish/lightnovelreader/api/0.2-SNAPSHOT/
+          retention-days: 1
