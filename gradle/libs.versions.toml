@@ -1,18 +1,18 @@
 [versions]
 desugar = "2.1.5"
-agp = "9.0.0"
-kotlin = "2.3.10"
-kotlinxCoroutinesCore = "1.10.2"
-runtime = "1.10.3"
-navigationRuntimeKtx = "2.9.7"
-jetbrainsKotlinJvm = "2.3.10"
-foundationLayout = "1.10.3"
-composeBom = "2026.02.00"
-composeMaterial3 = "1.4.0"
+agp = "8.5.2"
+kotlin = "1.9.24"
+kotlinxCoroutinesCore = "1.8.1"
+runtime = "1.8.0"
+navigationRuntimeKtx = "2.8.4"
+jetbrainsKotlinJvm = "1.9.24"
+foundationLayout = "1.8.0"
+composeBom = "2024.10.01"
+composeMaterial3 = "1.3.1"
 cxhttp = "1.2.5"
-okhttp = "5.3.2"
-kotlinSerialization = "1.10.0"
-jsoup = "1.22.1"
+okhttp = "4.12.0"
+kotlinSerialization = "1.7.1"
+jsoup = "1.18.1"
 lightnovelreader = "0.2-SNAPSHOT"
 
 [libraries]
@@ -37,6 +37,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 android-dynamic-feature = { id = "com.android.dynamic-feature", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-compose_compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
-
