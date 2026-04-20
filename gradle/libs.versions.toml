@@ -5,8 +5,11 @@ kotlin = "1.9.24"
 kotlinxCoroutinesCore = "1.8.1"
 kotlinSerialization = "1.7.1"
 okhttp = "4.12.0"
-lightnovelreader = "0.2-SNAPSHOT"
 androidxCore = "1.15.0"
+lightnovelreader = "0.2"
+composeBom = "2026.03.01"
+composeMaterial3 = "1.5.0-alpha16"
+composeFoundationLayout = "1.10.6"
 
 [libraries]
 okhttp3-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
@@ -14,8 +17,11 @@ okhttp3-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
-lightnovelreader-api = { module = "io.nightfish.lightnovelreader:api", version.ref = "lightnovelreader" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
+lightnovelreader-api = { module = "io.nightfish.lightnovelreader:api", version.ref = "lightnovelreader" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
+compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout", version.ref = "composeFoundationLayout" }
 
 [plugins]
 kotlin_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
