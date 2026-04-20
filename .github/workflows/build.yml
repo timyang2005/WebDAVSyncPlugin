@@ -12,7 +12,6 @@ on:
         default: '1.0.0'
 
 env:
-  GRADLE_VERSION: 9.2.1
   JAVA_VERSION: '17'
 
 jobs:
@@ -26,18 +25,12 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
           distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build Plugin
         run: |
-          gradle assembleDebug --no-daemon
-          # Rename APK to .lnrp
+          ./gradlew assembleDebug --no-daemon --no-build-cache
           if ls plugin/build/outputs/apk/debug/*.apk 1> /dev/null 2>&1; then
             for apk in plugin/build/outputs/apk/debug/*.apk; do
               mv "$apk" "${apk}.lnrp"
@@ -70,7 +63,7 @@ jobs:
       - name: Get Version Info
         id: version
         run: |
-          VERSION="${{ github.event.inputs.version || '1.0.0' }}"
+          VERSION="${INPUT_VERSION:-1.0.0}"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
@@ -85,13 +78,10 @@ jobs:
             ## WebDAV Sync Plugin for LightNovelReader
 
             ### Features
-            - WebDAV cloud sync support (Nextcloud, ownCloud, Synology, etc.)
+            - WebDAV cloud sync support
             - Sync reading history, bookshelf, and app settings
             - Auto and manual sync modes
-            - Incremental sync with conflict resolution
-
-            ### Installation
-            1. Download the .apk.lnrp file
-            2. Install with file manager in LightNovelReader
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version || '1.0.0' }}
