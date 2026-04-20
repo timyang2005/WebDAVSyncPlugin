@@ -12,16 +12,6 @@ enum class SyncType {
 }
 
 /**
- * 同步状态
- */
-enum class SyncStatus {
-    IDLE,
-    SYNCING,
-    SUCCESS,
-    FAILED
-}
-
-/**
  * 同步方向
  */
 enum class SyncDirection {
@@ -44,20 +34,18 @@ data class SyncDataContainer(
 )
 
 /**
- * 阅读历史记录项
+ * 阅读历史记录项 - 对应 UserReadingData
  */
 @Serializable
 data class ReadingHistoryItem(
     val bookId: String,
-    val bookTitle: String,
-    val chapterId: String,
-    val chapterTitle: String,
-    val progress: Float,           // 阅读进度 0.0 - 1.0
-    val scrollPosition: Long,      // 滚动位置
     val lastReadTime: Long,        // 最后阅读时间戳
-    val readDuration: Long,        // 累计阅读时长(毫秒)
-    val dataSourceId: Int,         // 数据源ID
-    val dataSourceName: String     // 数据源名称
+    val totalReadTime: Int,        // 总阅读时长(秒)
+    val readingProgress: Float,     // 阅读进度 0.0 - 1.0
+    val lastReadChapterId: String,
+    val lastReadChapterTitle: String,
+    val currentChapterProgressMap: Map<String, Float> = emptyMap(),
+    val maxChapterProgressMap: Map<String, Float> = emptyMap()
 )
 
 /**
@@ -75,8 +63,18 @@ data class BookshelfItem(
     val lastReadTime: Long?,
     val dataSourceId: Int,
     val dataSourceName: String,
-    val isSubscribed: Boolean,     // 是否订阅更新
-    val customOrder: Int           // 自定义排序顺序
+    val isSubscribed: Boolean,
+    val customOrder: Int
+)
+
+/**
+ * 同步清单
+ */
+@Serializable
+data class SyncManifest(
+    val lastSyncTime: Long,
+    val deviceId: String,
+    val syncedTypes: List<String>
 )
 
 /**
@@ -86,7 +84,5 @@ data class SyncResult(
     val success: Boolean,
     val syncType: SyncType,
     val direction: SyncDirection,
-    val itemCount: Int = 0,
-    val errorMessage: String? = null,
-    val timestamp: Long = System.currentTimeMillis()
+    val errorMessage: String? = null
 )
