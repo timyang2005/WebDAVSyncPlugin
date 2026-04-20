@@ -8,49 +8,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: 9.1
-          
+          gradle-version: 9.2.1
+
       - name: Build with Gradle
         run: gradle assembleDebug --no-daemon
         working-directory: plugin
         env:
           GRADLE_USER_HOME: /tmp/.gradle
-        
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: plugin-apk
           path: plugin/build/outputs/apk/debug/*.apk.lnrp
           retention-days: 7
-          
+
   release:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: plugin-apk
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
