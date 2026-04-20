@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.dobao.webdavsync"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.dobao.webdavsync"
