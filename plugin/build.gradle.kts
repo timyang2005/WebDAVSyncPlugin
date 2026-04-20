@@ -79,7 +79,7 @@ afterEvaluate {
         doFirst {
             def apkDir = new File(project.buildDir, "outputs/apk/debug")
             if (apkDir.exists()) {
-                def apkFiles = apkDir.listFiles { f -> f.name.endsWith(".apk") }
+                def apkFiles = apkDir.listFiles({ f -> f.name.endsWith(".apk") } as java.io.FilenameFilter)
                 if (apkFiles && apkFiles.length > 0) {
                     def apk = apkFiles[0]
                     def newName = apk.name.replace(".apk", ".apk.lnrp")
@@ -90,7 +90,7 @@ afterEvaluate {
                         into apkDir
                         rename { newName }
                     }
-                    println "Renamed:  -> "
+                    println "Renamed: ${apk.name} -> ${newName}"
                 }
             }
         }
