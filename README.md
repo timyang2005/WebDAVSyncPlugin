@@ -124,3 +124,5 @@ Apache License 2.0
 
 - [LightNovelReader](https://github.com/dmzz-yyhyy/LightNovelReader) - 优秀的开源轻小说阅读器
 - [LightNovelReaderPlugin-Template](https://github.com/dmzz-yyhyy/LightNovelReaderPlugin-Template) - 插件开发模板
+
+<!-- Trigger build check: 2026-04-20T18:43:48.525756 -->
