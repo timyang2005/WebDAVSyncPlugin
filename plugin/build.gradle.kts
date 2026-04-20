@@ -19,6 +19,7 @@ android {
     }
 
     buildFeatures {
+        compose = true
         buildConfig = true
     }
 
@@ -28,6 +29,10 @@ android {
         }
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
@@ -35,7 +40,6 @@ android {
     }
 }
 
-// Rename APK output to .lnrp
 @Suppress("DEPRECATION")
 android.applicationVariants.all {
     outputs.all {
@@ -56,4 +60,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp3.logging.interceptor)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.material3)
+    implementation(libs.compose.foundation.layout)
+    implementation(libs.lightnovelreader.api)
 }
