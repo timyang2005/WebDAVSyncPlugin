@@ -40,14 +40,6 @@ android {
     }
 }
 
-@Suppress("DEPRECATION")
-android.applicationVariants.all {
-    outputs.all {
-        val output = this as com.android.build.gradle.internal.api.ApplicationVariantOutputImpl
-        output.outputFileName = output.outputFileName.replace(".apk", ".apk.lnrp")
-    }
-}
-
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
@@ -64,4 +56,19 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.foundation.layout)
     implementation(libs.lightnovelreader.api)
+}
+
+// Rename debug APK to .lnrp
+afterEvaluate {
+    tasks.named("assembleDebug") {
+        doLast {
+            val apkDir = project.layout.buildDirectory.dir("outputs/apk/debug").get().asFile
+            val apkFile = apkDir.listFiles()?.find { it.name.endsWith(".apk") }
+            if (apkFile != null) {
+                val renamed = File(apkDir, apkFile.name.replace(".apk", ".apk.lnrp"))
+                apkFile.renameTo(renamed)
+                println("Renamed: ${renamed.name}")
+            }
+        }
+    }
 }
