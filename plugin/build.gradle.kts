@@ -1,22 +1,20 @@
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.dobao.webdavsync"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.dobao.webdavsync"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
     }
@@ -43,20 +41,18 @@ android {
     }
 }
 
-androidComponents {
-    onVariants { variant ->
-        variant.outputs.forEach {
-            val outputImpl = it as com.android.build.api.variant.impl.VariantOutputImpl
-            val originalFileName = outputImpl.outputFileName.get()
-            val newFileName = originalFileName.replace(".apk", ".apk.lnrp")
-            outputImpl.outputFileName = newFileName
-        }
+// Rename APK output to .lnrp (AGP 8.x)
+@Suppress("DEPRECATION")
+android.applicationVariants.all {
+    outputs.all {
+        val output = this as com.android.build.api.variant.impl.VariantOutputImpl
+        output.outputFileName = output.outputFileName.replace(".apk", ".apk.lnrp")
     }
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
@@ -79,55 +75,3 @@ dependencies {
     // LNR Api
     implementation(libs.lightnovelreader.api)
 }
-
-val debugHostPkg = "indi.dmzz_yyhyy.lightnovelreader.debug"
-val releaseHostPkg = "indi.dmzz_yyhyy.lightnovelreader"
-
-fun pluginApk(): File =
-    File(layout.buildDirectory.asFile.get(), "outputs/apk/debug")
-        .walkTopDown()
-        .first {
-            it.isFile && it.name.endsWith(".apk") || it.name.endsWith(".lnrp")
-        }
-
-fun installPluginTask(name: String, hostPkg: String) {
-    tasks.register(name) {
-        group = "plugin"
-        dependsOn("assembleDebug")
-
-        doLast {
-            val adb = listOf(androidComponents.sdkComponents.adb.get().asFile.absolutePath) +
-                    (System.getenv("ANDROID_SERIAL")?.let { listOf("-s", it) } ?: emptyList())
-
-            val src = pluginApk()
-            val file =
-                if (src.name.endsWith(".apk")) src
-                else File(src.parent, src.name.removeSuffix(".lnrp"))
-                    .also { src.renameTo(it) }
-
-            try {
-                providers.exec {
-                    commandLine(adb + listOf("install", "-r", "-t", file))
-                }.result.get()
-            } finally {
-                if (file != src) file.renameTo(src)
-            }
-
-            providers.exec {
-                commandLine(adb + listOf("shell", "am", "force-stop", hostPkg))
-            }.result.get()
-
-            providers.exec {
-                commandLine(
-                    adb + listOf(
-                        "shell", "monkey", "-p", hostPkg, "-c",
-                        "android.intent.category.LAUNCHER", "1"
-                    )
-                )
-            }.result.get()
-        }
-    }
-}
-
-installPluginTask("runDebugHost", debugHostPkg)
-installPluginTask("runReleaseHost", releaseHostPkg)
