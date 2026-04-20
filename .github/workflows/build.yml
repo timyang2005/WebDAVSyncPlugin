@@ -35,7 +35,14 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build Plugin
-        run: gradle assembleDebug --no-daemon
+        run: |
+          gradle assembleDebug --no-daemon
+          # Rename APK to .lnrp
+          if ls plugin/build/outputs/apk/debug/*.apk 1> /dev/null 2>&1; then
+            for apk in plugin/build/outputs/apk/debug/*.apk; do
+              mv "$apk" "${apk}.lnrp"
+            done
+          fi
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
