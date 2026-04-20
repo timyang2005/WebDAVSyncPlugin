@@ -1,0 +1,47 @@
+name: Debug Build
+
+on:
+  workflow_dispatch:
+
+env:
+  GRADLE_VERSION: 9.2.1
+  JAVA_VERSION: '17'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build with Gradle (debug mode)
+        run: |
+          cd plugin
+          gradle assembleDebug --no-daemon --stacktrace > gradle_output.txt 2>&1 || true
+
+      - name: Upload Gradle Output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gradle-output
+          path: plugin/gradle_output.txt
+          retention-days: 1
+
+      - name: Upload APK if exists
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-apk
+          path: plugin/build/outputs/apk/debug/*.apk.lnrp
+          retention-days: 1
